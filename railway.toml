@@ -1,0 +1,8 @@
+[build]
+builder = "NIXPACKS"
+
+[build.environment]
+PHP_EXTENSIONS = "intl,zip,mbstring,pdo_mysql"
+
+[deploy]
+startCommand = "php artisan serve --host=0.0.0.0 --port=$PORT"
