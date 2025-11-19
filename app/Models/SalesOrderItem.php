@@ -18,51 +18,18 @@ class SalesOrderItem extends Model
     {
         parent::boot();
 
-        // Ketika item dibuat, kurangi stok finished good
-        static::created(function ($item) {
-            $finishedGood = FinishedGood::find($item->finished_good_id);
-            if ($finishedGood) {
-                // Validasi stok cukup
-                if ($finishedGood->stock < $item->quantity) {
-                    // Rollback creation jika stok tidak cukup
-                    $item->delete();
-                    throw new \Exception("Stok {$finishedGood->name} tidak mencukupi. Stok tersedia: {$finishedGood->stock}, Dibutuhkan: {$item->quantity}");
-                }
-                // Kurangi stok
-                $finishedGood->decrement('stock', $item->quantity);
-            }
+        // Auto calculate subtotal sebelum save
+        static::saving(function ($item) {
+            $item->subtotal = $item->quantity * $item->price;
         });
 
-        // Ketika item diupdate, adjust stok
-        static::updating(function ($item) {
-            $oldQuantity = $item->getOriginal('quantity');
-            $newQuantity = $item->quantity;
-            $finishedGoodId = $item->getOriginal('finished_good_id');
-
-            $finishedGood = FinishedGood::find($finishedGoodId);
-
-            if ($finishedGood) {
-                // Kembalikan stok lama dulu
-                $finishedGood->increment('stock', $oldQuantity);
-
-                // Cek stok untuk quantity baru
-                if ($finishedGood->stock < $newQuantity) {
-                    // Jika tidak cukup, kembalikan ke semula
-                    $finishedGood->decrement('stock', $oldQuantity);
-                    throw new \Exception("Stok {$finishedGood->name} tidak mencukupi. Stok tersedia: {$finishedGood->stock}, Dibutuhkan: {$newQuantity}");
-                }
-
-                // Kurangi stok dengan quantity baru
-                $finishedGood->decrement('stock', $newQuantity);
-            }
+        // Trigger update total amount di Sales Order
+        static::saved(function ($item) {
+            $item->salesOrder->touch();
         });
 
-        // Ketika item dihapus, kembalikan stok
         static::deleted(function ($item) {
-            $finishedGood = FinishedGood::find($item->finished_good_id);
-            if ($finishedGood) {
-                $finishedGood->increment('stock', $item->quantity);
-            }
+            $item->salesOrder->touch();
         });
     }
 
@@ -76,9 +43,26 @@ class SalesOrderItem extends Model
         return $this->belongsTo(FinishedGood::class);
     }
 
-    // Backwards-compatible alias used elsewhere in the codebase
     public function finishedProduct()
     {
         return $this->finishedGood();
+    }
+
+    // Accessor untuk product name
+    public function getProductNameAttribute()
+    {
+        return $this->finishedGood ? $this->finishedGood->name : 'N/A';
+    }
+
+    // Accessor untuk brand
+    public function getBrandAttribute()
+    {
+        return $this->finishedGood ? $this->finishedGood->brand : null;
+    }
+
+    // Cek apakah stok cukup untuk item ini
+    public function getIsStockSufficientAttribute()
+    {
+        return $this->finishedGood && $this->finishedGood->stock >= $this->quantity;
     }
 }

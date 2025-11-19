@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\DB;
 
 class RawMaterialResource extends Resource
 {
@@ -108,8 +109,8 @@ class RawMaterialResource extends Resource
                             return match ($data['value']) {
                                 'low' => $query->whereColumn('stock', '<=', 'min_stock'),
                                 'warning' => $query->where('stock', '>', 'min_stock')
-                                                   ->where('stock', '<=', \DB::raw('min_stock * 1.5')),
-                                'good' => $query->where('stock', '>', \DB::raw('min_stock * 1.5')),
+                                                   ->where('stock', '<=', DB::raw('min_stock * 1.5')),
+                                'good' => $query->where('stock', '>', DB::raw('min_stock * 1.5')),
                             };
                         }
                         return $query;

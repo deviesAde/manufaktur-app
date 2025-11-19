@@ -3,188 +3,498 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use App\Models\Supplier;
+use App\Models\RawMaterial;
+use App\Models\FinishedGood;
+use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderItem;
+use App\Models\SalesOrder;
+use App\Models\SalesOrderItem;
+use App\Models\ProductionOrder;
+use App\Models\ProductionOrderItem;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
-use Faker\Factory as Faker;
+use Illuminate\Support\Facades\DB;
 
 class GarmentSeeder extends Seeder
 {
     public function run(): void
     {
-        $faker = Faker::create();
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
-       
+        // Clear existing data
+        ProductionOrderItem::truncate();
+        ProductionOrder::truncate();
+        SalesOrderItem::truncate();
+        SalesOrder::truncate();
+        PurchaseOrderItem::truncate();
+        PurchaseOrder::truncate();
+        FinishedGood::truncate();
+        RawMaterial::truncate();
+        Supplier::truncate();
+        User::truncate();
 
-        // Suppliers
-        $supplierIds = [];
-        for ($i = 0; $i < 5; $i++) {
-            $supplierIds[] = DB::table('suppliers')->insertGetId([
-                'name' => $faker->company,
-                'contact' => $faker->phoneNumber,
-                'address' => $faker->address,
-                'created_at' => Carbon::now()->subDays(rand(1, 60)),
-                'updated_at' => Carbon::now()->subDays(rand(1, 30)),
-            ]);
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+        // 1. Create Admin User
+        User::create([
+            'name' => 'Admin Garment',
+            'email' => 'admin@gmail.com',
+            'password' => Hash::make('password'),
+        ]);
+
+        // 2. Create Suppliers
+        $suppliers = [
+            [
+                'name' => 'PT Kain Nusantara',
+                'contact_person' => 'Budi Santoso',
+                'phone' => '+62 812-3456-7890',
+                'email' => 'budi@kainnusantara.com',
+                'address' => 'Jl. Tekstil No. 123, Surabaya',
+                'supplied_materials' => 'Kain Katun,Kain Sutra,Kain Linen,Benang',
+                'notes' => 'Supplier kain utama',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'CV Aksesori Fashion',
+                'contact_person' => 'Sari Dewi',
+                'phone' => '+62 813-4567-8901',
+                'email' => 'sari@aksesorifashion.com',
+                'address' => 'Jl. Aksesoris No. 45, Malang',
+                'supplied_materials' => 'Resleting,Kancing,Manik-manik,Renda',
+                'notes' => 'Supplier aksesoris berkualitas',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'UD Bahan Jahit Maju',
+                'contact_person' => 'Joko Prasetyo',
+                'phone' => '+62 814-5678-9012',
+                'email' => 'joko@bahanjahit.com',
+                'address' => 'Jl. Industri No. 78, Jember',
+                'supplied_materials' => 'Dakron,Kapas,Tali,Karet',
+                'notes' => 'Supplier bahan pelengkap',
+                'is_active' => true,
+            ]
+        ];
+
+        foreach ($suppliers as $supplier) {
+            Supplier::create($supplier);
         }
 
-        // Raw materials
-        $rawIds = [];
-        $rawList = ['Kain Katun','Benang Polyster','Kancing','Resleting','Papan Label','Garis Cetak','Karet','Perekat'];
-        foreach ($rawList as $name) {
-            $rawIds[] = DB::table('raw_materials')->insertGetId([
-                'name' => $name,
+        // 3. Create Raw Materials
+        $rawMaterials = [
+            // Kain
+            [
+                'name' => 'Kain Katun Prima',
+                'unit' => 'meter',
+                'stock' => 200,
+                'min_stock' => 50,
+            ],
+            [
+                'name' => 'Kain Linen',
+                'unit' => 'meter',
+                'stock' => 80,
+                'min_stock' => 20,
+            ],
+            [
+                'name' => 'Kain Sutra',
+                'unit' => 'meter',
+                'stock' => 40,
+                'min_stock' => 10,
+            ],
+            [
+                'name' => 'Kain Denim',
+                'unit' => 'meter',
+                'stock' => 60,
+                'min_stock' => 15,
+            ],
+            // Aksesoris
+            [
+                'name' => 'Resleting Metal 50cm',
                 'unit' => 'pcs',
-                'stock' => rand(50, 500),
-                'min_stock' => rand(10, 50),
-                'created_at' => Carbon::now()->subDays(rand(1, 90)),
-                'updated_at' => Carbon::now()->subDays(rand(1, 30)),
-            ]);
-        }
-
-        // Finished goods
-        $fgIds = [];
-        $fgList = ['Kaos Polos','Kemeja Kerja','Celana Panjang','Jaket Hoodie','Topi Baseball','Tas Selempang'];
-        foreach ($fgList as $name) {
-            $fgIds[] = DB::table('finished_goods')->insertGetId([
-                'name' => $name,
+                'stock' => 300,
+                'min_stock' => 100,
+            ],
+            [
+                'name' => 'Kancing Baju Plastik',
                 'unit' => 'pcs',
-                'stock' => rand(10, 200),
-                'price' => rand(50000, 300000),
-                'created_at' => Carbon::now()->subDays(rand(1, 90)),
-                'updated_at' => Carbon::now()->subDays(rand(1, 30)),
-            ]);
+                'stock' => 800,
+                'min_stock' => 200,
+            ],
+            [
+                'name' => 'Benang Jahit Hitam',
+                'unit' => 'roll',
+                'stock' => 50,
+                'min_stock' => 15,
+            ],
+            [
+                'name' => 'Benang Jahit Putih',
+                'unit' => 'roll',
+                'stock' => 45,
+                'min_stock' => 15,
+            ],
+            [
+                'name' => 'Tali Serut',
+                'unit' => 'meter',
+                'stock' => 120,
+                'min_stock' => 30,
+            ]
+        ];
+
+        foreach ($rawMaterials as $material) {
+            RawMaterial::create($material);
         }
 
-        // Finished good -> raw material mapping
-        foreach ($fgIds as $fgId) {
-            $needed = $faker->randomElements($rawIds, rand(2, 4));
-            foreach ($needed as $rawId) {
-                DB::table('finished_good_raw_material')->insert([
-                    'finished_good_id' => $fgId,
-                    'raw_material_id' => $rawId,
-                    'quantity' => $faker->randomFloat(2, 0.1, 10),
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
-                ]);
+        // 4. Create Finished Goods (Produk Baju Daerah Tapal Kuda)
+        $finishedGoods = [
+            [
+                'name' => 'Baju Koko Pria',
+                'unit' => 'pcs',
+                'stock' => 25,
+                'min_stock' => 10,
+                'price' => 85000,
+                'production_cost' => 45000,
+                'description' => 'Baju koko pria dengan bahan katun nyaman',
+            ],
+            [
+                'name' => 'Kebaya Modern',
+                'unit' => 'pcs',
+                'stock' => 15,
+                'min_stock' => 6,
+                'price' => 185000,
+                'production_cost' => 95000,
+                'description' => 'Kebaya dengan desain modern dan elegan',
+            ],
+            [
+                'name' => 'Kaos Oblong',
+                'unit' => 'pcs',
+                'stock' => 50,
+                'min_stock' => 20,
+                'price' => 45000,
+                'production_cost' => 22000,
+                'description' => 'Kaos oblong basic berbagai ukuran',
+            ],
+            [
+                'name' => 'Kemeja Flanel',
+                'unit' => 'pcs',
+                'stock' => 18,
+                'min_stock' => 8,
+                'price' => 120000,
+                'production_cost' => 65000,
+                'description' => 'Kemeja flanel hangat untuk cuaca dingin',
+            ],
+            [
+                'name' => 'Celana Jeans',
+                'unit' => 'pcs',
+                'stock' => 30,
+                'min_stock' => 12,
+                'price' => 150000,
+                'production_cost' => 75000,
+                'description' => 'Celana jeans denim berkualitas',
+            ],
+            [
+                'name' => 'Blus Wanita',
+                'unit' => 'pcs',
+                'stock' => 22,
+                'min_stock' => 9,
+                'price' => 95000,
+                'production_cost' => 48000,
+                'description' => 'Blus wanita dengan potongan trendy',
+            ],
+            [
+                'name' => 'Jas Almamater',
+                'unit' => 'pcs',
+                'stock' => 35,
+                'min_stock' => 15,
+                'price' => 75000,
+                'production_cost' => 38000,
+                'description' => 'Jas almamater dengan bordir logo',
+            ],
+            [
+                'name' => 'Seragam Sekolah',
+                'unit' => 'set',
+                'stock' => 40,
+                'min_stock' => 18,
+                'price' => 110000,
+                'production_cost' => 55000,
+                'description' => 'Set seragam sekolah lengkap',
+            ]
+        ];
+
+        foreach ($finishedGoods as $product) {
+            FinishedGood::create($product);
+        }
+
+        // 5. Create Recipe (Resep Produksi)
+        $recipes = [
+            // Baju Koko Pria
+            'Baju Koko Pria' => [
+                'Kain Katun Prima' => 2.2,
+                'Benang Jahit Hitam' => 0.3,
+                'Kancing Baju Plastik' => 5,
+            ],
+            // Kebaya Modern
+            'Kebaya Modern' => [
+                'Kain Sutra' => 2.8,
+                'Benang Jahit Putih' => 0.4,
+                'Kancing Baju Plastik' => 8,
+                'Resleting Metal 50cm' => 1,
+            ],
+            // Kaos Oblong
+            'Kaos Oblong' => [
+                'Kain Katun Prima' => 1.5,
+                'Benang Jahit Hitam' => 0.2,
+            ],
+            // Kemeja Flanel
+            'Kemeja Flanel' => [
+                'Kain Linen' => 2.5,
+                'Benang Jahit Putih' => 0.35,
+                'Kancing Baju Plastik' => 6,
+                'Resleting Metal 50cm' => 1,
+            ],
+            // Celana Jeans
+            'Celana Jeans' => [
+                'Kain Denim' => 1.8,
+                'Benang Jahit Hitam' => 0.4,
+                'Resleting Metal 50cm' => 1,
+                'Tali Serut' => 1.2,
+            ],
+            // Blus Wanita
+            'Blus Wanita' => [
+                'Kain Katun Prima' => 1.8,
+                'Benang Jahit Putih' => 0.25,
+                'Kancing Baju Plastik' => 4,
+            ]
+        ];
+
+        foreach ($recipes as $productName => $materials) {
+            $product = FinishedGood::where('name', $productName)->first();
+            if ($product) {
+                foreach ($materials as $materialName => $quantity) {
+                    $material = RawMaterial::where('name', $materialName)->first();
+                    if ($material) {
+                        $product->rawMaterials()->attach($material->id, ['quantity' => $quantity]);
+                    }
+                }
             }
         }
 
-        // Purchase orders + items
-        $poIds = [];
-        for ($p = 0; $p < 5; $p++) {
-            $supplierId = $faker->randomElement($supplierIds);
-            $orderDate = Carbon::now()->subDays(rand(1, 120));
-            $poId = DB::table('purchase_orders')->insertGetId([
-                'po_number' => 'PO'.Str::upper(Str::random(7)),
-                'supplier_id' => $supplierId,
-                'order_date' => $orderDate->toDateString(),
-                'status' => $faker->randomElement(['Menunggu','Dikirim','Diterima']),
-                'total_cost' => 0,
-                'created_at' => $orderDate,
-                'updated_at' => $orderDate,
-            ]);
+        // 6. Create Purchase Orders
+        $purchaseOrders = [
+            [
+                'supplier_id' => 1,
+                'order_date' => now()->subDays(15),
+                'expected_date' => now()->subDays(5),
+                'status' => 'Diterima',
+                'notes' => 'Pembelian kain untuk produksi stock',
+            ],
+            [
+                'supplier_id' => 2,
+                'order_date' => now()->subDays(8),
+                'expected_date' => now()->addDays(2),
+                'status' => 'Dikirim',
+                'notes' => 'Pembelian aksesoris dan perlengkapan jahit',
+            ],
+            [
+                'supplier_id' => 3,
+                'order_date' => now()->subDays(3),
+                'expected_date' => now()->addDays(7),
+                'status' => 'Menunggu',
+                'notes' => 'Pembelian bahan pelengkap produksi',
+            ]
+        ];
 
-            $total = 0;
-            $itemsCount = rand(2, 4);
-            $choices = $faker->randomElements($rawIds, $itemsCount);
-            foreach ($choices as $rawId) {
-                $qty = rand(10, 200);
-                $price = rand(1000, 50000);
-                $subtotal = $qty * $price;
-                DB::table('purchase_order_items')->insert([
-                    'purchase_order_id' => $poId,
-                    'raw_material_id' => $rawId,
-                    'quantity' => $qty,
-                    'price' => $price,
-                    'subtotal' => $subtotal,
-                    'created_at' => $orderDate,
-                    'updated_at' => $orderDate,
+        foreach ($purchaseOrders as $index => $poData) {
+            $poData['po_number'] = 'PO-' . now()->format('Ymd') . '-' . str_pad($index + 1, 3, '0', STR_PAD_LEFT);
+            $po = PurchaseOrder::create($poData);
+
+            // Add items to PO based on supplier
+            if ($po->supplier_id == 1) { // Supplier kain
+                PurchaseOrderItem::create([
+                    'purchase_order_id' => $po->id,
+                    'raw_material_id' => 1, // Kain Katun Prima
+                    'quantity' => 200,
+                    'price' => 32000,
+                    'subtotal' => 6400000,
                 ]);
-                $total += $subtotal;
+                PurchaseOrderItem::create([
+                    'purchase_order_id' => $po->id,
+                    'raw_material_id' => 3, // Kain Sutra
+                    'quantity' => 50,
+                    'price' => 75000,
+                    'subtotal' => 3750000,
+                ]);
+            } elseif ($po->supplier_id == 2) { // Supplier aksesoris
+                PurchaseOrderItem::create([
+                    'purchase_order_id' => $po->id,
+                    'raw_material_id' => 5, // Resleting Metal 50cm
+                    'quantity' => 200,
+                    'price' => 4200,
+                    'subtotal' => 840000,
+                ]);
+                PurchaseOrderItem::create([
+                    'purchase_order_id' => $po->id,
+                    'raw_material_id' => 6, // Kancing Baju Plastik
+                    'quantity' => 500,
+                    'price' => 280,
+                    'subtotal' => 140000,
+                ]);
+            } elseif ($po->supplier_id == 3) { // Supplier bahan pelengkap
+                PurchaseOrderItem::create([
+                    'purchase_order_id' => $po->id,
+                    'raw_material_id' => 7, // Benang Jahit Hitam
+                    'quantity' => 30,
+                    'price' => 11500,
+                    'subtotal' => 345000,
+                ]);
+                PurchaseOrderItem::create([
+                    'purchase_order_id' => $po->id,
+                    'raw_material_id' => 9, // Tali Serut
+                    'quantity' => 80,
+                    'price' => 2500,
+                    'subtotal' => 200000,
+                ]);
             }
 
-            DB::table('purchase_orders')->where('id', $poId)->update(['total_cost' => $total]);
-            $poIds[] = $poId;
+            // Auto calculate total cost
+            $totalCost = $po->items()->sum('subtotal');
+            $po->update(['total_cost' => $totalCost]);
         }
 
-        // Sales orders + items
-        $soIds = [];
-        for ($s = 0; $s < 7; $s++) {
-            $orderDate = Carbon::now()->subDays(rand(1, 100));
-            $soId = DB::table('sales_orders')->insertGetId([
-                'customer_name' => $faker->name,
-                'order_date' => $orderDate->toDateString(),
-                'status' => $faker->randomElement(['Dikirim','Diterima']),
-                'total_amount' => 0,
-                'created_at' => $orderDate,
-                'updated_at' => $orderDate,
-            ]);
+        // 7. Create Sales Orders
+        $salesOrders = [
+            [
+                'customer_name' => 'Toko Baju Sumber Rejeki',
+                'order_date' => now()->subDays(12),
+                'status' => 'completed',
+                'notes' => 'Pesanan untuk toko baju di pusat kota',
+            ],
+            [
+                'customer_name' => 'Distributor Fashion Jatim',
+                'order_date' => now()->subDays(6),
+                'status' => 'processing',
+                'notes' => 'Pesanan grosir untuk distributor regional',
+            ],
+            [
+                'customer_name' => 'CV Busana Mandiri',
+                'order_date' => now()->subDays(2),
+                'status' => 'pending',
+                'notes' => 'Pesanan seragam perusahaan',
+            ]
+        ];
 
-            $total = 0;
-            $itemsCount = rand(1, 3);
-            $choices = $faker->randomElements($fgIds, $itemsCount);
-            foreach ($choices as $fgId) {
-                $qty = rand(1, 10);
-                $price = DB::table('finished_goods')->where('id', $fgId)->value('price') ?: rand(50000, 150000);
-                $subtotal = $qty * $price;
-                DB::table('sales_order_items')->insert([
-                    'sales_order_id' => $soId,
-                    'finished_good_id' => $fgId,
-                    'quantity' => $qty,
-                    'price' => $price,
-                    'subtotal' => $subtotal,
-                    'created_at' => $orderDate,
-                    'updated_at' => $orderDate,
+        foreach ($salesOrders as $soData) {
+            $so = SalesOrder::create($soData);
+
+            // Add items to Sales Order
+            if ($so->id == 1) {
+                SalesOrderItem::create([
+                    'sales_order_id' => $so->id,
+                    'finished_good_id' => 1, // Baju Koko Pria
+                    'quantity' => 8,
+                    'price' => 85000,
+                    'subtotal' => 680000,
                 ]);
-                $total += $subtotal;
+                SalesOrderItem::create([
+                    'sales_order_id' => $so->id,
+                    'finished_good_id' => 3, // Kaos Oblong
+                    'quantity' => 15,
+                    'price' => 45000,
+                    'subtotal' => 675000,
+                ]);
+            } elseif ($so->id == 2) {
+                SalesOrderItem::create([
+                    'sales_order_id' => $so->id,
+                    'finished_good_id' => 2, // Kebaya Modern
+                    'quantity' => 5,
+                    'price' => 185000,
+                    'subtotal' => 925000,
+                ]);
+                SalesOrderItem::create([
+                    'sales_order_id' => $so->id,
+                    'finished_good_id' => 6, // Blus Wanita
+                    'quantity' => 12,
+                    'price' => 95000,
+                    'subtotal' => 1140000,
+                ]);
+            } else {
+                SalesOrderItem::create([
+                    'sales_order_id' => $so->id,
+                    'finished_good_id' => 7, // Jas Almamater
+                    'quantity' => 25,
+                    'price' => 75000,
+                    'subtotal' => 1875000,
+                ]);
+                SalesOrderItem::create([
+                    'sales_order_id' => $so->id,
+                    'finished_good_id' => 8, // Seragam Sekolah
+                    'quantity' => 20,
+                    'price' => 110000,
+                    'subtotal' => 2200000,
+                ]);
             }
 
-            DB::table('sales_orders')->where('id', $soId)->update(['total_amount' => $total]);
-            $soIds[] = $soId;
+            // Auto calculate total amount
+            $totalAmount = $so->items()->sum('subtotal');
+            $so->update(['total_amount' => $totalAmount]);
         }
 
-        // Production orders, items and results
-        for ($i = 0; $i < 6; $i++) {
-            $linkedSo = $faker->optional(0.6)->randomElement($soIds);
-            $start = Carbon::now()->subDays(rand(1, 40));
-            $end = (rand(0,1) ? $start->copy()->addDays(rand(1,7)) : null);
-            $poCode = 'PRD'.Str::upper(Str::random(6));
-            $prodId = DB::table('production_orders')->insertGetId([
-                'production_code' => $poCode,
-                'sales_order_id' => $linkedSo,
-                'start_date' => $start->toDateString(),
-                'end_date' => $end ? $end->toDateString() : null,
-                'status' => $faker->randomElement(['Pending','Proses','Selesai']),
-                'notes' => $faker->optional()->sentence,
-                'created_at' => $start,
-                'updated_at' => $end ?: $start,
-            ]);
+        // 8. Create Production Orders
+        $productionOrders = [
+            [
+                'finished_good_id' => 1, // Baju Koko Pria
+                'sales_order_id' => 3,
+                'quantity' => 15,
+                'start_date' => now()->subDays(4),
+                'status' => 'in_progress',
+                'notes' => 'Produksi baju koko untuk pesanan seragam',
+            ],
+            [
+                'finished_good_id' => 3, // Kaos Oblong
+                'sales_order_id' => null,
+                'quantity' => 40,
+                'start_date' => now()->subDays(1),
+                'status' => 'pending',
+                'notes' => 'Produksi kaos untuk stock toko',
+            ],
+            [
+                'finished_good_id' => 8, // Seragam Sekolah
+                'sales_order_id' => 3,
+                'quantity' => 25,
+                'start_date' => now(),
+                'status' => 'completed',
+                'notes' => 'Produksi seragam untuk pesanan sekolah',
+            ]
+        ];
 
-            // items: use random raw materials
-            $used = $faker->randomElements($rawIds, rand(1,3));
-            foreach ($used as $rawId) {
-                DB::table('production_order_items')->insert([
-                    'production_order_id' => $prodId,
-                    'raw_material_id' => $rawId,
-                    'quantity_used' => rand(1, 100),
-                    'created_at' => $start,
-                    'updated_at' => $start,
-                ]);
-            }
+        foreach ($productionOrders as $index => $prodData) {
+            $prodData['production_code'] = 'PROD-' . now()->format('Ymd') . '-' . str_pad($index + 1, 3, '0', STR_PAD_LEFT);
+            $productionOrder = ProductionOrder::create($prodData);
 
-            // production results: produce 1 or 2 finished goods
-            $produced = $faker->randomElements($fgIds, rand(1,2));
-            foreach ($produced as $fgId) {
-                DB::table('production_results')->insert([
-                    'production_order_id' => $prodId,
-                    'finished_good_id' => $fgId,
-                    'quantity' => rand(1, 50),
-                    'created_at' => $start,
-                    'updated_at' => $start,
-                ]);
+            // Add production items based on recipe
+            $product = $productionOrder->finishedGood;
+            if ($product && $product->rawMaterials) {
+                foreach ($product->rawMaterials as $material) {
+                    $quantityUsed = $material->pivot->quantity * $productionOrder->quantity;
+                    ProductionOrderItem::create([
+                        'production_order_id' => $productionOrder->id,
+                        'raw_material_id' => $material->id,
+                        'quantity_used' => $quantityUsed,
+                    ]);
+                }
             }
         }
+
+        $this->command->info('✅ Seeder Garment berhasil dijalankan!');
+        $this->command->info('📊 Ringkasan Data:');
+        $this->command->info('   - Admin: 1 (admin@gmail.com)');
+        $this->command->info('   - Supplier: 3');
+        $this->command->info('   - Bahan Baku: 9 jenis');
+        $this->command->info('   - Produk Jadi: 8 jenis');
+        $this->command->info('   - Purchase Order: 3');
+        $this->command->info('   - Sales Order: 3');
+        $this->command->info('   - Production Order: 3');
+        $this->command->info('👤 Login: admin@gmail.com / password');
+        $this->command->info('🎯 Sistem siap digunakan!');
     }
 }

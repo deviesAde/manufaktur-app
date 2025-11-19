@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
         GarmentSeeder::class, // seeder sebelumnya
-        AdminSeeder::class,   // seeder admin baru
+        // AdminSeeder::class,   // seeder admin baru
     ]);
     }
 }

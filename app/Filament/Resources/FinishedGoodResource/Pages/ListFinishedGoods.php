@@ -10,10 +10,12 @@ class ListFinishedGoods extends ListRecords
 {
     protected static string $resource = FinishedGoodResource::class;
 
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\CreateAction::make(),
-        ];
-    }
+   protected function getHeaderActions(): array
+{
+    return [
+        Actions\CreateAction::make(),
+       
+    ];
+}
+
 }

@@ -6,17 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('finished_goods', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('unit', 20)->default('pcs');
+            $table->string('unit');
             $table->integer('stock')->default(0);
-            $table->decimal('price', 12, 2)->default(0);
+            $table->integer('min_stock')->default(0); // TAMBAH: stok minimum
+            $table->decimal('price', 12, 2);
+            $table->decimal('production_cost', 12, 2)->default(0); // TAMBAH: biaya produksi
+            $table->text('description')->nullable(); // TAMBAH: deskripsi
             $table->timestamps();
         });
     }

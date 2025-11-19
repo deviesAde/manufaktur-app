@@ -4,14 +4,15 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('production_order_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('production_order_id')->constrained()->cascadeOnDelete();
             $table->foreignId('raw_material_id')->constrained()->cascadeOnDelete();
-            $table->integer('quantity_used');
+            $table->decimal('quantity_used', 10, 2); // jumlah bahan baku yang digunakan
             $table->timestamps();
         });
     }
@@ -21,5 +22,3 @@ return new class extends Migration {
         Schema::dropIfExists('production_order_items');
     }
 };
-
-

@@ -4,16 +4,19 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('production_orders', function (Blueprint $table) {
             $table->id();
             $table->string('production_code')->unique();
-            $table->foreignId('sales_order_id')->nullable()->constrained()->cascadeOnDelete(); // JIT link
-            $table->date('start_date')->nullable();
+            $table->foreignId('finished_good_id')->constrained()->cascadeOnDelete(); // TAMBAH INI
+            $table->foreignId('sales_order_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->integer('quantity'); // TAMBAH: jumlah yang akan diproduksi
+            $table->date('start_date');
             $table->date('end_date')->nullable();
-            $table->enum('status', ['Pending', 'Proses', 'Selesai'])->default('Pending');
+            $table->enum('status', ['pending', 'in_progress', 'completed', 'cancelled'])->default('pending');
             $table->text('notes')->nullable();
             $table->timestamps();
         });
@@ -24,5 +27,3 @@ return new class extends Migration {
         Schema::dropIfExists('production_orders');
     }
 };
-
-
