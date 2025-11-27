@@ -105,12 +105,7 @@ class SupplierResource extends Resource
                     ->sortable()
                     ->toggleable(),
 
-                Tables\Columns\BadgeColumn::make('supplied_materials_count')
-                    ->label('Materials')
-                    ->counts('purchaseOrders')
-                    ->color('gray')
-                    ->sortable(),
-
+                
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Status')
                     ->boolean()

@@ -30,7 +30,7 @@ class PurchaseOrderResource extends Resource
                         ->label('PO Number')
                         ->disabled()
                         ->dehydrated()
-                        ->default('AUTO-GENERATED'),
+                        ->helperText('Will be auto-generated upon save'),
 
                     Forms\Components\Select::make('supplier_id')
                         ->label('Supplier')
@@ -178,7 +178,7 @@ class PurchaseOrderResource extends Resource
             'index' => Pages\ListPurchaseOrders::route('/'),
             'create' => Pages\CreatePurchaseOrder::route('/create'),
             'edit' => Pages\EditPurchaseOrder::route('/{record}/edit'),
-            
+
         ];
     }
 }

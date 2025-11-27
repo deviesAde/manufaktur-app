@@ -54,7 +54,9 @@ class PurchaseOrder extends Model
             }
         });
 
-        // 3. Auto update stok raw material ketika PO diterima
+
+
+
         static::updated(function ($purchaseOrder) {
             // Jika status berubah menjadi DITERIMA
             if ($purchaseOrder->status === self::STATUS_DITERIMA &&
@@ -94,7 +96,34 @@ class PurchaseOrder extends Model
             default => 'gray'
         };
     }
+public static function generateUniquePoNumber()
+{
+    $prefix = 'PO';
+    $date = date('Ymd');
 
+    
+    $lastPO = self::where('po_number', 'like', "{$prefix}-{$date}-%")
+        ->orderBy('created_at', 'desc')
+        ->first();
+
+    if ($lastPO) {
+
+        $lastNumber = intval(substr($lastPO->po_number, -4));
+        $nextNumber = $lastNumber + 1;
+    } else {
+        $nextNumber = 1;
+    }
+
+    $poNumber = "{$prefix}-{$date}-" . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+
+    // Double check uniqueness
+    while (self::where('po_number', $poNumber)->exists()) {
+        $nextNumber++;
+        $poNumber = "{$prefix}-{$date}-" . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+    }
+
+    return $poNumber;
+}
     // Cek apakah bisa di-edit
     public function getCanEditAttribute()
     {

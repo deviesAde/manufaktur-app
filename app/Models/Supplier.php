@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Supplier extends Model
 {
@@ -32,6 +33,20 @@ class Supplier extends Model
     {
         return $this->supplied_materials ? explode(',', $this->supplied_materials) : [];
     }
+
+       public static function generatePoNumber()
+    {
+        $prefix = 'PO';
+        $date = now()->format('Ymd');
+
+        do {
+            $random = Str::upper(Str::random(6));
+            $poNumber = "{$prefix}-{$date}-{$random}";
+        } while (static::where('po_number', $poNumber)->exists());
+
+        return $poNumber;
+    }
+
 
     // Mutator untuk menyimpan materials sebagai string
     public function setSuppliedMaterialsAttribute($value)

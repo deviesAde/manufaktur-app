@@ -112,20 +112,10 @@ class ProductionOrderResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('finishedGood.brand')
-                    ->label('Brand')
-                    ->badge()
-                    ->color(fn ($state) => match($state) {
-                        'batik_jogja' => 'info',
-                        'fashion_solo' => 'warning',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn ($state) => match($state) {
-                        'batik_jogja' => 'Batik Jogja',
-                        'fashion_solo' => 'Fashion Solo',
-                        default => $state,
-                    })
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('finishedGood.min_stock')
+                    ->label('Min Stock')
+                    ->sortable()
+                    ->formatStateUsing(fn ($state) => number_format($state)),
 
                 Tables\Columns\TextColumn::make('quantity')
                     ->label('Quantity')
