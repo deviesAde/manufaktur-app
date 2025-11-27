@@ -18,8 +18,8 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         $this->call([
-        GarmentSeeder::class, // seeder sebelumnya
-        // AdminSeeder::class,   // seeder admin baru
+        GarmentSeeder::class,
+        AdminSeeder::class,   
     ]);
     }
 }

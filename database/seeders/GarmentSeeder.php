@@ -37,11 +37,11 @@ class GarmentSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         // 1. Create Admin User
-        User::create([
-            'name' => 'Admin Garment',
-            'email' => 'admin@gmail.com',
-            'password' => Hash::make('password'),
-        ]);
+        // User::create([
+        //     'name' => 'Admin PT Garment',
+        //     'email' => 'admin@gmail.com',
+        //     'password' => Hash::make('password'),
+        // ]);
 
         // 2. Create Suppliers
         $suppliers = [
