@@ -20,19 +20,13 @@ class AppServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      */
     public function boot()
-    {
-        if ($this->app->environment('production')) {
-            // Semua URL jadi HTTPS
-            URL::forceScheme('https');
+{
+    
+    if ($this->app->environment('production')) {
+        URL::forceScheme('https');
 
 
-            Request::setTrustedProxies(
-                ['0.0.0.0/0'],
-                Request::HEADER_X_FORWARDED_FOR |
-                Request::HEADER_X_FORWARDED_HOST |
-                Request::HEADER_X_FORWARDED_PORT |
-                Request::HEADER_X_FORWARDED_PROTO
-            );
-        }
+        \Illuminate\Support\Facades\URL::forceScheme('https');
     }
+}
 }
