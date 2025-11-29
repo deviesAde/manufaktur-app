@@ -190,96 +190,52 @@
                 </div>
             </div>
 
-            <!-- Rekomendasi Pembelian dengan JiT -->
+            <!-- Rekomendasi Pembelian -->
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Rekomendasi Pembelian (JiT)</h2>
-                    <div class="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
-                        <x-heroicon-s-clock class="w-4 h-4" />
-                        <span>Berdasarkan forecast 30 hari</span>
-                    </div>
-                </div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Rekomendasi Pembelian Bahan Baku</h2>
                 <div class="space-y-3 max-h-96 overflow-y-auto">
                     @foreach($purchaseSuggestions as $suggestion)
-                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-sm dark:hover:shadow-gray-900/50 transition-shadow">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="flex-1">
-                                    <h3 class="font-medium text-gray-900 dark:text-white text-sm mb-1">{{ $suggestion['product'] }}</h3>
-                                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">{{ $suggestion['raw_material'] }}</p>
-
-                                    <!-- Info JiT -->
-                                    <div class="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
-                                        @if(isset($suggestion['lead_time']))
-                                            <div class="flex items-center space-x-1">
-                                                <x-heroicon-s-truck class="w-3 h-3" />
-                                                <span>Lead Time: {{ $suggestion['lead_time'] }} hari</span>
-                                            </div>
-                                        @endif
-                                        @if(isset($suggestion['safety_stock']))
-                                            <div class="flex items-center space-x-1">
-                                                <x-heroicon-s-shield-check class="w-3 h-3" />
-                                                <span>Safety: {{ $suggestion['safety_stock'] }} {{ $suggestion['unit'] }}</span>
-                                            </div>
-                                        @endif
-                                    </div>
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:shadow-sm dark:hover:shadow-gray-900/50 transition-shadow">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h3 class="font-medium text-gray-900 dark:text-white text-sm">{{ $suggestion['product'] }}</h3>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400">{{ $suggestion['raw_material'] }}</p>
                                 </div>
                                 <span class="px-2 py-1 text-xs rounded-full
-                                    {{ $suggestion['priority'] == 'Tinggi' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-800' :
-                                       ($suggestion['priority'] == 'Sedang' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800' : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800') }}">
+                                    {{ $suggestion['priority'] == 'Kritis' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-800' :
+                                       ($suggestion['priority'] == 'Tinggi' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400 border border-orange-200 dark:border-orange-800' :
+                                       ($suggestion['priority'] == 'Sedang' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800' : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800')) }}">
                                     {{ $suggestion['priority'] }}
                                 </span>
                             </div>
-
-                            <!-- Progress Bar Stok -->
-                            <div class="mb-3">
-                                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                    <span>Tingkat Stok</span>
-                                    <span>{{ $suggestion['current_stock'] }} / {{ $suggestion['required_qty'] + ($suggestion['safety_stock'] ?? 0) }} {{ $suggestion['unit'] }}</span>
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                    <span class="text-gray-600 dark:text-gray-400">Butuh:</span>
+                                    <span class="dark:text-gray-200">{{ $suggestion['required_qty'] }} {{ $suggestion['unit'] }}</span>
                                 </div>
-                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                    @php
-                                        $maxStock = $suggestion['required_qty'] + ($suggestion['safety_stock'] ?? 0);
-                                        $stockPercentage = min(100, ($suggestion['current_stock'] / $maxStock) * 100);
-                                        $progressColor = $stockPercentage < 20 ? 'bg-red-500' : ($stockPercentage < 50 ? 'bg-yellow-500' : 'bg-green-500');
-                                    @endphp
-                                    <div class="h-2 rounded-full {{ $progressColor }} transition-all duration-300"
-                                         style="width: {{ $stockPercentage }}%"></div>
+                                <div>
+                                    <span class="text-gray-600 dark:text-gray-400">Stok:</span>
+                                    <span class="{{ $suggestion['current_stock'] < $suggestion['min_stock'] ? 'text-red-600 dark:text-red-400 font-medium' : 'dark:text-gray-200' }}">
+                                        {{ $suggestion['current_stock'] }} {{ $suggestion['unit'] }}
+                                    </span>
                                 </div>
-                            </div>
-
-                            <!-- Detail Kuantitas -->
-                            <div class="grid grid-cols-2 gap-3 text-xs">
-                                <div class="space-y-1">
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-600 dark:text-gray-400">Stok Saat Ini:</span>
-                                        <span class="font-medium dark:text-gray-200">{{ $suggestion['current_stock'] }} {{ $suggestion['unit'] }}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-600 dark:text-gray-400">Kebutuhan:</span>
-                                        <span class="font-medium text-blue-600 dark:text-blue-400">{{ $suggestion['required_qty'] }} {{ $suggestion['unit'] }}</span>
-                                    </div>
+                                <div>
+                                    <span class="text-gray-600 dark:text-gray-400">Min Stock:</span>
+                                    <span class="dark:text-gray-200">{{ $suggestion['min_stock'] }} {{ $suggestion['unit'] }}</span>
                                 </div>
-                                <div class="space-y-1">
-                                    @if(isset($suggestion['safety_stock']))
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-600 dark:text-gray-400">Safety Stock:</span>
-                                        <span class="font-medium text-orange-600 dark:text-orange-400">{{ $suggestion['safety_stock'] }} {{ $suggestion['unit'] }}</span>
-                                    </div>
-                                    @endif
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-600 dark:text-gray-400 font-semibold">Rekomendasi Beli:</span>
-                                        <span class="font-bold text-green-600 dark:text-green-400">{{ $suggestion['suggested_purchase'] }} {{ $suggestion['unit'] }}</span>
-                                    </div>
+                                <div>
+                                    <span class="text-gray-600 dark:text-gray-400">Safety:</span>
+                                    <span class="dark:text-gray-200">{{ $suggestion['safety_stock'] }} {{ $suggestion['unit'] }}</span>
+                                </div>
+                                <div class="col-span-2 border-t border-gray-200 dark:border-gray-700 pt-2 mt-1">
+                                    <span class="text-gray-600 dark:text-gray-400">Rekomendasi Beli:</span>
+                                    <span class="font-medium text-blue-600 dark:text-blue-400">{{ $suggestion['suggested_purchase'] }} {{ $suggestion['unit'] }}</span>
                                 </div>
                             </div>
                         </div>
                     @endforeach
                     @if(count($purchaseSuggestions) == 0)
-                        <div class="text-center py-8">
-                            <x-heroicon-s-check-circle class="w-12 h-12 text-green-400 mx-auto mb-3" />
-                            <p class="text-gray-500 dark:text-gray-400">Tidak ada rekomendasi pembelian saat ini</p>
-                            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Stok bahan baku mencukupi kebutuhan</p>
-                        </div>
+                        <p class="text-gray-500 dark:text-gray-400 text-center py-4">Tidak ada rekomendasi pembelian saat ini</p>
                     @endif
                 </div>
             </div>
@@ -304,7 +260,9 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false },
+                        legend: {
+                            display: false
+                        },
                         tooltip: {
                             backgroundColor: isDarkMode ? 'rgba(31, 41, 55, 0.95)' : 'rgba(0, 0, 0, 0.8)',
                             titleColor: 'white',
@@ -318,12 +276,20 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            grid: { color: gridColor },
-                            ticks: { color: textColor }
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
                         },
                         x: {
-                            grid: { color: gridColor },
-                            ticks: { color: textColor }
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
                         }
                     },
                     elements: {
@@ -364,7 +330,9 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false },
+                        legend: {
+                            display: false
+                        },
                         tooltip: {
                             backgroundColor: isDarkMode ? 'rgba(31, 41, 55, 0.95)' : 'rgba(0, 0, 0, 0.8)',
                             titleColor: 'white',
@@ -377,11 +345,17 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            grid: { color: gridColor },
-                            ticks: { color: textColor }
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
                         },
                         x: {
-                            grid: { display: false },
+                            grid: {
+                                display: false
+                            },
                             ticks: {
                                 color: textColor,
                                 maxRotation: 45
@@ -433,12 +407,20 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            grid: { color: gridColor },
-                            ticks: { color: textColor }
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
                         },
                         x: {
-                            grid: { color: gridColor },
-                            ticks: { color: textColor }
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
                         }
                     },
                     elements: {

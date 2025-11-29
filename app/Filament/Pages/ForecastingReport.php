@@ -60,11 +60,10 @@ class ForecastingReport extends Page
 
             $productName = $orders->first()->product_name;
 
-            // Metode Rata-rata Bergerak (Moving Average) 3 bulan
+            // ✅ METODE MOVING AVERAGE 3 BULAN
             $monthlyData = $this->getMonthlySalesData($finishedGoodId, 6);
-            $last3Months = array_slice($monthlyData, -3); // Ambil 3 bulan terakhir
+            $last3Months = array_slice($monthlyData, -3);
             $movingAverage = array_sum($last3Months) / count($last3Months);
-
             $nextMonthForecast = round($movingAverage);
 
             $forecastResults[] = [
@@ -75,30 +74,29 @@ class ForecastingReport extends Page
                 'trend' => $this->calculateSalesTrend($monthlyData),
             ];
 
-            // Hitung rekomendasi pembelian bahan baku
-            $finishedGood = FinishedGood::with('recipe')->find($finishedGoodId);
+            // ✅ JIT MURNI: HANYA HITUNG PEMBELIAN UNTUK BULAN DEPAN
+            $finishedGood = FinishedGood::with('rawMaterials')->find($finishedGoodId);
 
-            if ($finishedGood && $finishedGood->recipe->isNotEmpty()) {
-                foreach ($finishedGood->recipe as $rawMaterial) {
+            if ($finishedGood && $finishedGood->rawMaterials->isNotEmpty()) {
+                foreach ($finishedGood->rawMaterials as $rawMaterial) {
+                    // JIT: Hanya hitung kebutuhan bulan depan
                     $requiredQty = $rawMaterial->pivot->quantity * $nextMonthForecast;
 
-                    // Safety stock 25%
-                    $safetyStock = $requiredQty * 0.25;
-                    $totalNeeded = $requiredQty + $safetyStock;
+                    // JIT: Langsung kebutuhan - stok saat ini (TANPA SAFETY STOCK)
+                    $shortage = $requiredQty - $rawMaterial->stock;
 
-                    $suggestedPurchase = max(0, ceil($totalNeeded - $rawMaterial->stock));
+                    // JIT: Hanya beli jika benar-benar butuh
+                    if ($shortage > 0) {
+                        $suggestedPurchase = ceil($shortage);
 
-                    if ($suggestedPurchase > 0) {
                         $purchaseSuggestions[] = [
                             'product' => $productName,
                             'raw_material' => $rawMaterial->name,
                             'required_qty' => round($requiredQty),
-                            'safety_stock' => round($safetyStock),
                             'current_stock' => $rawMaterial->stock,
                             'suggested_purchase' => $suggestedPurchase,
                             'unit' => $rawMaterial->unit,
-                            'priority' => $rawMaterial->stock < $requiredQty ? 'Tinggi' :
-                                        ($rawMaterial->stock < $totalNeeded ? 'Sedang' : 'Rendah'),
+                            'priority' => $this->calculateJITPriority($rawMaterial->stock, $requiredQty),
                         ];
                     }
                 }
@@ -107,6 +105,33 @@ class ForecastingReport extends Page
 
         $this->forecastResults = $forecastResults;
         $this->purchaseSuggestions = $purchaseSuggestions;
+    }
+
+   
+    private function calculateJITPriority($currentStock, $requiredQty)
+    {
+        if ($currentStock <= 0) {
+            return 'URGENT - Stock Out';
+        } elseif ($currentStock < ($requiredQty * 0.5)) {
+            return 'HIGH - Critical Low';
+        } elseif ($currentStock < $requiredQty) {
+            return 'MEDIUM - Need Soon';
+        } else {
+            return 'LOW - No Purchase';
+        }
+    }
+    // TAMBAHKAN METHOD UNTUK HITUNG PRIORITAS
+    private function calculatePriority($currentStock, $minStock, $requiredQty, $totalNeeded)
+    {
+        if ($currentStock < $minStock) {
+            return 'Kritis';
+        } elseif ($currentStock < $requiredQty) {
+            return 'Tinggi';
+        } elseif ($currentStock < $totalNeeded) {
+            return 'Sedang';
+        } else {
+            return 'Rendah';
+        }
     }
 
     public function prepareSummaryData()
